@@ -1,0 +1,611 @@
+﻿@using System.ComponentModel
+@using AntDesign.TableModels
+@using syserver.Shared
+@inject NavigationManager NavigationManager
+@using System.ComponentModel.DataAnnotations;
+@using System.Text.Json;
+@using syserver.Shared.Model;
+@using System.Text;
+@using Color = syserver.Shared.Model.Color;
+@inject IJSRuntime JSRuntime
+@inject HttpClient Http
+@inject IMessageService _message
+
+
+
+
+<style>
+    tr {
+        /*        background-color: #1890ff;*/
+    }
+
+    th {
+        color: white;
+        text-align: center;
+    }
+    /* 自定义选择器下拉列表滚动条样式 */
+    .custom-select-scrollbar::-webkit-scrollbar {
+        width: 2px; /* 设置滚动条宽度 */
+    }
+
+    .custom-select-scrollbar::-webkit-scrollbar-thumb {
+        background: gray; /* 滚动条滑块颜色 */
+    }
+
+    .custom-select-scrollbar::-webkit-scrollbar-track {
+        background: white; /* 滚动条背景颜色 */
+    }
+</style>
+<div>
+
+    <RadioGroup @bind-Value="selectionType">
+        <Radio Value="@("checkbox")">制单数量</Radio>
+        <Radio Value="@("radio")">入库数量</Radio>
+    </RadioGroup>
+</div>
+@if (style == null)
+{
+    <p><em>请选择款号 Loading...</em></p>
+}
+else
+{
+    <Table TItem="IData" DataSource="@data" HidePagination="false" RowClassName="@(_=>"editable-row")" Bordered TableLayout="true" ScrollX="1300" ScrollY="380" ScrollBarWidth="5px">
+        <ColumnDefinitions>
+            <ColumnDefinition Width="50" />
+            <ColumnDefinition Width="80" />
+            @for (int i = 0; i < listsizeid.Count; i++)
+            {
+                var Column = listsizeid[i];
+
+                if (Column >= 0)
+                {
+                    <ColumnDefinition Width="80" />
+                }
+
+                // 判断是否到达最后一次
+                if (i == listsizeid.Count - 1)
+                {
+
+                    <ColumnDefinition Width="113" />
+
+                    // 这是最后一次循环
+                    // 在这里可以执行相应的操作
+                }
+            }
+            <ColumnDefinition />
+
+
+        </ColumnDefinitions>
+        <HeaderTemplate>
+            <TableRow>
+                <SimpleTableHeader style="text-align:center">ID</SimpleTableHeader>
+                <SimpleTableHeader Style="text-align:center">颜色</SimpleTableHeader>
+                @for (int i = 0; i < listsizeid.Count; i++)
+                {
+                    var Column = listsizeid[i];
+
+                    if (Column >= 0)
+                    {
+                        <SimpleTableHeader style="text-align:center">@SizeTable.FirstOrDefault(s => s.sizeid == Column)?.sizename</SimpleTableHeader>
+                    }
+
+                    // 判断是否到达最后一次
+                    if (i == listsizeid.Count - 1)
+                    {
+                        // 这是最后一次循环
+                        // 在这里可以执行相应的操作
+
+                        <SimpleTableHeader style="text-align:center">
+                            <Select TItem="Size"
+                                    TItemValue="int"
+                                    DataSource="@listsize"
+                                    @bind-Value="@_selectedValue"
+                                    ValueName="@nameof(Size.sizeid)"
+                                    LabelName="@nameof(Size.sizename)"
+                                    OnSelectedItemChanged="OnSelectedSizeChangedHandler"
+                                    DefaultActiveFirstOption="false"
+                                    Bordered="false"
+                                    Class="custom-select-scrollbar"
+                                    Style="width: 80px;">
+                            </Select>
+                        </SimpleTableHeader>
+
+                    }
+                }
+                <SimpleTableHeader style="text-align:center">合计</SimpleTableHeader>
+            </TableRow>
+        </HeaderTemplate>
+        <RowTemplate>
+            <TableRow>
+                <TableCell Style="text-align:center">@context.Data.Key</TableCell>
+                <TableCell Style="text-align:center"> @CololTable.FirstOrDefault(s => s.colorid == @context.Data.col)?.colorname</TableCell>
+                @for (int i = 0; i < listsizeidnums.Count; i++)
+                {
+                    var Column = listsizeidnums[i];
+
+                    if (Column >= 0)
+                    {<TableCell>
+                            <Dropdown Trigger="new Trigger[] { Trigger.ContextMenu }">
+                                <Overlay>
+                                    <Menu>
+                                        <MenuItem @onclick="() => FillRight(context.Data, listsizeidnums.IndexOf(Column))">向右填充</MenuItem>
+                                        <MenuItem>向下填充</MenuItem>
+                                    </Menu>
+                                </Overlay>
+                                <ChildContent>
+
+                                    <Input Style="text-align:center" Type="text" Placeholder="空" Bordered="false" @bind-Value="@context.Data.AgeColumns[Column]" AutoFocus @oninput="() => UpdateCellValue(context.Data, Column, Convert.ToInt32(context.Data.AgeColumns[Column]))" @onblur="HandleBlur" />
+
+                                </ChildContent>
+                            </Dropdown>
+                        </TableCell>
+
+                    }
+
+                    // 判断是否到达最后一次
+                    if (i == listsizeidnums.Count - 1)
+                    {
+
+                        <TableCell></TableCell>
+
+                        // 这是最后一次循环
+                        // 在这里可以执行相应的操作
+                    }
+                }
+                <TableCell>@trowTotals[@context.Data.Key]</TableCell>
+            </TableRow>
+
+        </RowTemplate>
+
+
+
+
+    </Table>
+    <div style="display: flex; gap: 20px;">
+        <Select TItem="Color"
+                TItemValue="int"
+                DataSource="@listcolor"
+                @bind-Value="@_selectedValue"
+                ValueName="@nameof(Color.colorid)"
+                LabelName="@nameof(Color.colorname)"
+                OnSelectedItemChanged="OnSelectedColorChangedHandler"
+                DefaultActiveFirstOption="false"
+                Style="width: 200px;">
+        </Select>
+
+        @*<Select TItem="Size"
+                    TItemValue="int"
+                    DataSource="@listsize"
+                    @bind-Value="@_selectedValue"
+                    ValueName="@nameof(Size.sizeid)"
+                    LabelName="@nameof(Size.sizename)"
+                    OnSelectedItemChanged="OnSelectedSizeChangedHandler"
+                    DefaultActiveFirstOption="false"
+                    Style="width: 200px;">
+            </Select>*@
+    </div>
+
+    <br />
+    <br />
+
+}
+<div>
+    <Button Type="primary" OnClick="@PrintTableData">
+        提交
+    </Button>
+
+</div>
+
+
+
+
+
+
+
+@code {
+
+    string selectionType = "checkbox";
+    //接收下拉列表选择的参数
+    [Parameter]
+    public string StyleNameValue { get; set; }
+    [Parameter]
+    public string SelectedStyleName { get; set; }
+
+    //下拉列表，新增行列
+    Color color_selectedItem;
+    Size size_selectedItem;
+    int _selectedValue;
+    List<Color> listcolor;
+    List<Size> listsize;
+    [Parameter]
+    public int setid { get; set; }
+
+
+    //表单数据信息显示
+    private Style[]? style;
+    private WeatherForecast[]? forecasts;
+
+    //定义尺寸列和颜色列等的数据
+    List<int> listsizeid = new List<int>();
+    List<int> listcoloid = new List<int>();
+    List<int> listsizeidnums = new List<int>();//记录总列数
+    List<List<int>> resultList = new List<List<int>>();//记录列内表格的数据
+    private int currentKey = 0;
+
+    //获取表格中全部的尺码、颜色
+    private Size[]? SizeTable;
+    private syserver.Shared.Model.Color[]? CololTable;
+
+    //定义表格数据列表
+    private List<IData> tdata = new List<IData>();
+    IData[] data = new Data[] { };
+    Style[] styledatas = new Style[] { };
+
+
+    //页面初始化
+    protected override async Task OnInitializedAsync()
+    {
+        //style = await Http.GetFromJsonAsync<Style[]>("WeatherForecast", SelectedStyleName);
+        CololTable = await Http.GetFromJsonAsync<syserver.Shared.Model.Color[]>("Color");
+        SizeTable = await Http.GetFromJsonAsync<Size[]>("Size");
+        listcolor = CololTable.ToList();
+        listsize = SizeTable.ToList();
+        CalculateRowTotals();
+    }
+    //页面监控
+    protected override async Task OnParametersSetAsync()
+    {
+        if (!string.IsNullOrEmpty(SelectedStyleName))
+        {
+            await shuxin();
+            await startdata();
+            CalculateRowTotals();
+        }
+    }
+
+    //初始化表格数据
+    private async Task startdata()
+    {
+
+        int cidnum = 0;
+        tdata.Clear();
+        foreach (var cid in listcoloid)
+        {
+
+            var startdata = new Data
+            {
+                Key = cidnum,
+                col = cid,
+                AgeColumns = resultList[cidnum]
+            };
+            tdata.Add(startdata);
+            cidnum++;
+        }
+        data = tdata.ToArray();
+
+    }
+    //选择款号后重新获取数据的方法 start
+    public async Task shuxin()
+    {
+        styledatas = await Http.GetFromJsonAsync<Style[]>("WeatherForecast?name=" + SelectedStyleName);
+        style = await Http.GetFromJsonAsync<Style[]>("WeatherForecast?name=" + SelectedStyleName);
+        CololTable = await Http.GetFromJsonAsync<syserver.Shared.Model.Color[]>("Color");
+        SizeTable = await Http.GetFromJsonAsync<Size[]>("Size");
+        // 打印 styledatas 数组
+        // 获取唯一的 stylecoloid 值
+        int[] uniqueColoids = style.Select(s => s.stylecoloid).Distinct().ToArray();
+
+        // 获取唯一的 stylesizeid 值
+        int[] uniqueSizeids = style.Select(s => s.stylesizeid).Distinct().ToArray();
+
+        // 创建一个二维数组来存储相同 stylecoloid 的 stylenum 数据
+        int[,] resultArray = new int[uniqueColoids.Length, uniqueSizeids.Length];
+
+        // 使用两个嵌套循环来遍历所有可能的组合
+        for (int i = 0; i < uniqueColoids.Length; i++)
+        {
+            for (int j = 0; j < uniqueSizeids.Length; j++)
+            {
+                // 查找匹配的样式数据
+                var cellData = style.FirstOrDefault(s => s.stylecoloid == uniqueColoids[i] && s.stylesizeid == uniqueSizeids[j]);
+
+                // 如果找到匹配的数据，将其存储在结果数组中
+                if (cellData != null)
+                {
+                    resultArray[i, j] = cellData.stylenum;
+                }
+                else
+                {
+                    // 如果没有匹配的数据，将其设置为默认值（例如0）
+                    resultArray[i, j] = 0;
+                }
+            }
+        }
+        resultList.Clear();
+
+        for (int i = 0; i < resultArray.GetLength(0); i++)
+        {
+            List<int> rowList = new List<int>();
+            for (int j = 0; j < resultArray.GetLength(1); j++)
+            {
+                rowList.Add(resultArray[i, j]);
+            }
+            resultList.Add(rowList);
+        }
+
+
+        listcoloid.Clear();
+        listsizeid.Clear();
+        listsizeidnums.Clear();
+        int sizenums = 0;
+        foreach (var id in uniqueColoids)
+        {
+            listcoloid.Add(id);
+        }
+        foreach (var id in uniqueSizeids)
+        {
+
+            listsizeid.Add(id);
+            listsizeidnums.Add(sizenums);
+            sizenums++;
+        }
+        var styleListaa = new List<Style>();
+        styleListaa = style.ToList();
+    }
+    //end
+    //下拉选择方法 start
+    private void OnSelectedColorChangedHandler(Color value)
+    {
+        _selectedValue = 0;
+        color_selectedItem = value;
+        Console.WriteLine($"selected: ${value?.colorname}");
+        AddRow(value.colorname, value.colorid);
+    }
+    private void OnSelectedSizeChangedHandler(Size value)
+    {
+        _selectedValue = 0;
+        size_selectedItem = value;
+        Console.WriteLine($"selected: ${value?.sizename}");
+        AddAgeColumn(value.sizeid, value.sizename);
+    }
+    //新增行列方法
+    void AddRow(string a, int b)
+    {
+        // 创建一个新的 IData 对象，可以自定义属性值
+        var newRow = new Data
+        {
+            Key = (data.Length + 0), // 自定义 Key 值
+            Name = a, // 自定义 Name 值
+            Ad = 0, // 自定义 Address 值
+            col = b,
+            AgeColumns = new List<int>()
+        };
+
+        // 将新行添加到 data 数组
+        data = data.Append(newRow).ToArray();
+
+        // 为新行的 AgeColumns 属性添加 Age 列数据
+        listcoloid.Add(b);
+        trowTotals.Add(listsizeidnums.Count + 0);
+        newRow.AgeColumns = new List<int>();
+        foreach (var Column in listsizeidnums)
+        {
+            newRow.AgeColumns.Add(0); // 添加新 Age 列，初始值为 0
+        }
+    }
+    void AddAgeColumn(int sizeid, string Sizetname)
+    {
+        setid = sizeid;
+        listsizeid.Add(sizeid);
+        listsizeidnums.Add(listsizeidnums.Count + 0);
+
+        // 更新数据源中的每个 IData 对象，以包含新的 Age 列
+        foreach (var dataItem in data)
+        {
+            dataItem.AgeColumns.Add(0); // 添加新 Age 列，初始值为 0
+        }
+    }
+    //end
+
+    //整理表格数据并提交方法 start
+    // 方法来获取表格中的所有数据
+    private void PrintTableData()
+    {
+        GenerateStyle();
+    }
+
+    //整理表格数据至Style
+    private async Task GenerateStyle()
+    {
+        List<Style> upstyleList = new List<Style>();
+        foreach (var coloid in listcoloid)
+        {
+            var aa = 0;
+            foreach (var sizeid in listsizeid)
+            {
+                //// 找到匹配的数据行
+                var relevantDataRows = data.Single(d => d.col == coloid);
+                int secondValue = relevantDataRows.AgeColumns.ElementAtOrDefault(aa);
+                int AdValue = relevantDataRows.Ad;
+                aa++;
+                Style newStyle = new Style
+                {
+                    stylename = SelectedStyleName,
+                    stylecoloid = coloid,
+                    stylesizeid = sizeid,
+                    stylenum = secondValue
+                };
+                // 添加到 List<Style>
+                upstyleList.Add(newStyle);
+            }
+
+        }
+        await SubmitData(upstyleList);
+
+
+
+    }
+    //提交数据
+    private async Task SubmitData(List<Style> styles)
+    {
+        // 发送 POST 请求到服务器，并将 updatedStyleData 列表作为请求体
+        var response = await Http.PostAsJsonAsync("Style", styles);
+
+        // 检查服务器响应的状态码
+        if (response.IsSuccessStatusCode)
+        {
+            // 处理成功响应
+
+            var responseData = await response.Content.ReadAsStringAsync();
+            // 这里可以处理responseData
+            Console.WriteLine("成功提交信息");
+            Success();
+        }
+        else
+        {
+            // 处理失败响应
+            // 可以在这里处理错误情况
+            await Error();
+            Console.WriteLine("提交信息失败");
+        }
+
+
+
+
+    }
+    //end
+
+    //定义了表格读取的数据
+    public interface IData
+    {
+        public int Key { get; set; }
+        public string Name { get; set; }
+        public int Ad { get; set; }
+        public int col { get; set; }
+        public List<int> AgeColumns { get; set; } // 用于保存 Age 列的值
+    }
+    public class Data : IData
+    {
+        public int Key { get; set; }
+        public string Name { get; set; }
+        public int Ad { get; set; }
+        public int col { get; set; }
+        public List<int> AgeColumns { get; set; }
+    }
+
+    //右键选择内容方法 start
+    private IData selectedRowData;
+    private void FillRight(IData rowData, int column)
+    {
+        // 获取要填充的值
+        var fillValue = rowData.AgeColumns[column];
+
+        // 使用相同的值填充右侧相邻单元格
+        for (int i = column + 1; i < rowData.AgeColumns.Count; i++)
+        {
+            rowData.AgeColumns[i] = fillValue;
+        }
+        //重新计算当前行的合计值
+        CalculateRowTotals();
+
+    }
+
+    private List<string> selectedColors = new List<string>();
+    private List<string> columnHeaders = new List<string>();
+    private void AddColumn(ChangeEventArgs e)
+    {
+        var selectedColor = e.Value?.ToString();
+        if (!string.IsNullOrEmpty(selectedColor) && !selectedColors.Contains(selectedColor))
+        {
+            selectedColors.Add(selectedColor);
+            columnHeaders.Add(selectedColor);
+        }
+    }
+    //end
+
+
+
+
+    //计算行和列的总数 start
+    private int CalculateColumnTotal(int col)
+    {
+        int total = 0;
+
+        foreach (var row in style.Select(s => s.stylesizeid).Distinct())
+        {
+            var cellData = style.FirstOrDefault(s => s.stylecoloid == col && s.stylesizeid == row);
+            if (cellData != null)
+            {
+                total += cellData.stylenum;
+            }
+        }
+
+        return total;
+    }
+
+    private int CalculateRowTotal(int row)
+    {
+        int total = 0;
+
+        foreach (var col in style.Select(s => s.stylecoloid).Distinct())
+        {
+            var cellData = style.FirstOrDefault(s => s.stylecoloid == col && s.stylesizeid == row);
+            if (cellData != null)
+            {
+                total += cellData.stylenum;
+            }
+        }
+
+        return total;
+    }
+    //end
+
+    //计算每一行的总和 start
+    private List<int> trowTotals = new List<int>();
+
+    private void CalculateRowTotals()
+    {
+        trowTotals.Clear();
+        foreach (var rowData in data)
+        {
+            int rowTotal = rowData.AgeColumns.Sum();
+            trowTotals.Add(rowTotal);
+        }
+    }
+    //end
+
+    //元素失去焦点触发
+    private void HandleBlur(FocusEventArgs e)
+    {
+        CalculateRowTotals();
+    }
+    //更新行总和
+    private void UpdateCellValue(IData rowData, int column, int value)
+    {
+        rowData.AgeColumns[column] = value;
+        CalculateRowTotals(); // 更新每一行的总和
+    }
+
+    //全局提示 start
+    private void Success()
+    {
+        Console.WriteLine("打印信息");
+        _message.Success("数据提交成功",1);
+
+    }
+
+    private async Task Error()
+    {
+        await _message.Error("数据提交失败",1);
+
+    }
+
+    //end
+
+
+}
+
+
+
+
+

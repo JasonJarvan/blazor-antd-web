@@ -1,0 +1,500 @@
+﻿@using System.ComponentModel
+@using AntDesign.TableModels
+@using syserver.Shared
+@inject NavigationManager NavigationManager
+@using System.ComponentModel.DataAnnotations;
+@using System.Text.Json;
+@using syserver.Shared.Model;
+@using System.Text;
+@using Color = syserver.Shared.Model.Color;
+@inject IJSRuntime JSRuntime
+@inject HttpClient Http
+@inject IMessageService _message
+
+<style>
+    p {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
+
+    tr {
+        /*        background-color: #1890ff;*/
+    }
+
+    th {
+        color: white;
+        text-align: center;
+    }
+
+    .toger {
+        display: inline-block;
+        width: 20%;
+        margin-top: -10%;
+    }
+
+    .span {
+        padding: 0px;
+    }
+
+    #ant-btn ant-btn-primary span {
+        padding: 0px;
+    }
+
+    .editable-row td {
+        text-align: center; /* 水平居中 */
+        vertical-align: middle; /* 垂直居中 */
+    }
+    /* 自定义滚动条样式 */
+    ::-webkit-scrollbar {
+        width: 1px; /* 滚动条宽度 */
+    }
+
+    ::-webkit-scrollbar-thumb {
+        background: white; /* 滚动条滑块颜色 */
+    }
+
+    ::-webkit-scrollbar-track {
+        background: white; /* 滚动条背景颜色 */
+    }
+</style>
+<div>
+    <Layout>
+        <Sider style="background-color: white;">
+            <div style="height:250px">
+                <div style="background-color: lightgrey;text-align:center;">图纸资料</div>
+                <div style="width: 100%; height: 91.5%; background-color: white; display: flex; flex-wrap: wrap; padding-bottom: 0px;overflow-x:auto; overflow-y:auto" ScrollBarWidth="5px">
+                    @if (listsize != null)
+                    {
+                        @foreach (var size in listsize)
+                        {
+                            <div style="width:30%; padding: 5px;">
+                                <Button Type="primary" size="Size.Small" style="width: 100%; font-size: 12px; text-align: center; padding: 0;" @onclick="() => ButtonClicked(size)">
+                                    <!-- 用实际属性替换 'Name' -->
+                                    @size.sizename
+                                </Button>
+                            </div>
+                        }
+                    }
+                </div>
+            </div>
+            <div style="height:250px;">
+                <div style="background-color: lightgrey;text-align:center;">拉布数据</div>
+                <div style="width:100%;height:100%; background-color:white; display: flex; flex-wrap: wrap;padding-bottom:50px;">
+                    @if (listcolor != null)
+                    {
+                        @foreach (var color in listcolor)
+                        {
+                            <div style="width:30%; padding: 5px;">
+                                <Button Type="primary" size="Size.Small" style="width: 100%; font-size: 12px; text-align: center; padding: 0;" @onclick="() => ButtonClicked(color)">
+                                    @color.colorname <!-- 用实际属性替换 'Name' -->
+                                </Button>
+                            </div>
+                        }
+                    }
+                </div>
+            </div>
+        </Sider>
+        <Layout>
+            <div>
+                <Divider Orientation="left" style=" margin: 4px 0 0 0;">
+                    <p style="font-size:14px">扎号设置</p>
+                </Divider>
+                <RadioGroup @bind-Value="selectionType" size="Size.Small">
+                    <div class="toger">
+                        <Radio Value="@("checkbox")" style="font-size: 10px;">从第一扎开始</Radio>
+                    </div>
+                    <div class="toger">
+                        <Radio Value="@("radio")" style="font-size: 10px;">接本款上单</Radio>
+                    </div>
+                    <div class="toger" style="width:25%;">
+                        <Radio Value="@("radio2")" style="font-size: 10px;">从指定扎号开始</Radio>
+                    </div>
+                    <div class="toger " style="width:5%;margin-left:-5%">
+                        <Input style="font-size: 10px;" />
+                    </div>
+                    <div class="toger">
+                        <Button Type="primary" style="font-size: 10px; width: 83px; height: 28px;" size="Size.Small" @onclick="PrintTableData">生成扎号</Button>
+                    </div>
+
+                </RadioGroup>
+            </div>
+            <Content style="background-color: white;">
+                <Table TItem="IData" DataSource="@data" RowClassName="@(_=>"editable-row")" Bordered TableLayout="true" ScrollX="1000" ScrollY="380" ScrollBarWidth="3px">
+                    <ColumnDefinitions>
+                        <ColumnDefinition Width="50" />
+                        <ColumnDefinition Width="80" />
+                        <ColumnDefinition Width="80" />
+                        @foreach (var ageColumn in ageColumns)
+                        {
+
+
+                            if (ageColumn >= 0)
+                            {
+
+                                <ColumnDefinition Width="80" />
+                            }
+                        }
+                        <ColumnDefinition />
+
+                    </ColumnDefinitions>
+                    <HeaderTemplate>
+                        <TableRow>
+                            <SimpleTableHeader>ID</SimpleTableHeader>
+                            <SimpleTableHeader>颜色</SimpleTableHeader>
+                            <SimpleTableHeader>件数</SimpleTableHeader>
+
+
+
+                            @foreach (var id in listid)
+                            {
+                                <SimpleTableHeader>@SizeTable.FirstOrDefault(s => s.sizeid == id)?.sizename</SimpleTableHeader>
+                            }
+                            <SimpleTableHeader></SimpleTableHeader>
+                        </TableRow>
+                    </HeaderTemplate>
+                    <RowTemplate>
+                        <TableRow>
+                            <TableCell>@context.Data.Key</TableCell>
+                            <TableCell>@context.Data.Name</TableCell>
+                            <TableCell>
+                                @*<Dropdown Trigger="new Trigger[] { Trigger.ContextMenu }">
+                                    <Overlay>
+                                        <Menu>
+                                            <MenuItem @onclick="() => FillRight(context.Data, int.Parse(context.Data.Key))">向右填充</MenuItem>
+                                            <MenuItem>向下填充</MenuItem>
+                                        </Menu>
+                                    </Overlay>
+                                    <ChildContent>*@
+                                        <Input Type="text" Placeholder="空" Bordered="false" @bind-Value="@context.Data.Ad" AutoFocus />
+                                    @*</ChildContent>
+                                </Dropdown>*@
+                                
+                            </TableCell>
+                            @foreach (var ageColumn in ageColumns)
+                            {                                
+                                if (ageColumn >= 0)
+                                {<TableCell>
+                                        <Dropdown Trigger="new Trigger[] { Trigger.ContextMenu }">
+                                            <Overlay>
+                                                <Menu>
+                                                    <MenuItem @onclick="() => FillRight(context.Data, ageColumns.IndexOf(ageColumn))">向右填充</MenuItem>
+                                                    <MenuItem>向下填充</MenuItem>
+                                                </Menu>
+                                            </Overlay>
+                                            <ChildContent>
+                                                <Input Type="text" Placeholder="num" Bordered="false" @bind-Value="@context.Data.AgeColumns[ageColumn]" AutoFocus />
+                                                @*<Input Style="text-align:center" Type="text" Placeholder="空" Bordered="false" @bind-Value="@context.Data.AgeColumns[ageColumn]" AutoFocus  />*@
+                                            </ChildContent>
+                                        </Dropdown>
+                                    </TableCell>
+
+                                }
+                            }
+                            <TableCell></TableCell>
+
+                        </TableRow>
+                    </RowTemplate>
+                </Table>
+            </Content>
+        </Layout>
+    </Layout>
+</div>
+
+@code
+{
+    string selectionType = "checkbox";
+    //接收下拉列表选择的参数
+    [Parameter]
+    public int setid { get; set; }
+    [Parameter]
+    public string SelectedStyleName { get; set; }
+    //定义表格数据
+    List<int> listid = new List<int>();
+    List<int> listcoloid = new List<int>();
+    List<List<int>> styleTable = new List<List<int>>();
+    //Ant表格先定义显示的数组
+    List<Style[]> tabstyle = new List<Style[]> { };
+
+    //表单数据信息显示
+    private Style[]? style;
+    private WeatherForecast[]? forecasts;
+    private syserver.Shared.Model.Color[]? CololTable;
+    private Size[]? SizeTable;
+
+    List<Color> listcolor;
+    List<Size> listsize;
+
+    protected override async Task OnInitializedAsync()
+    {
+
+    }
+    protected override async Task OnParametersSetAsync()
+    {
+        if (!string.IsNullOrEmpty(SelectedStyleName))
+        {
+            await shuxin();
+        }
+    }
+    //选择款号后重新获取数据的方法 start
+    public async Task shuxin()
+    {
+        style = await Http.GetFromJsonAsync<Style[]>("WeatherForecast?name=" + SelectedStyleName);
+        CololTable = await Http.GetFromJsonAsync<syserver.Shared.Model.Color[]>("Color");
+        SizeTable = await Http.GetFromJsonAsync<Size[]>("Size");
+        listcolor = CololTable.ToList();
+        listsize = SizeTable.ToList();
+
+    }
+    // 更新 stylenum 数据
+    private void UpdateStyleNum(int col, int row, ChangeEventArgs e)
+    {
+        var cellData = style.FirstOrDefault(s => s.stylecoloid == col && s.stylesizeid == row);
+
+        if (cellData != null)
+        {
+            // 将输入的文本转换为整数，或者根据需要进行其他验证
+            if (int.TryParse(e.Value.ToString(), out int newValue))
+            {
+                cellData.stylenum = newValue;
+            }
+        }
+    }
+
+    //拉布颜色数据按钮
+    private void ButtonClicked(Color color)
+    {
+        Console.WriteLine("打印数据data" + data);
+
+        var tabcolor = new Style
+        {
+            stylecoloid = color.colorid,
+            styleid = 0,
+            stylename = "res",
+            stylenum = 23,
+            stylesizeid = 23,
+
+        };
+        tabstyle.Add(new Style[] { tabcolor });
+        AddRow(color.colorname, color.colorid);
+    }
+    //拉布尺寸数据按钮
+    private void ButtonClicked(Size size)
+    {
+        var tabsize = new Style[0];
+        tabstyle.Add(tabsize);
+        AddAgeColumn(size.sizeid, size.sizename);
+    }
+    //生成扎号按钮
+    // 生成扎号按钮点击事件
+    private async Task GenerateStyleNumbers()
+    {
+        // 构建一个对象，包含需要提交的数据
+        var updatedStyleData = new List<Style>();
+
+        for (int col = 0; col < styleTable[0].Count; col++)
+        {
+            for (int row = 0; row < styleTable.Count; row++)
+            {
+                updatedStyleData.Add(new Style
+                {
+                    stylename = SelectedStyleName,
+                    stylecoloid = col,
+                    stylesizeid = row,
+                    stylenum = styleTable[row][col]
+                });
+            }
+        }
+
+        string postData = JsonSerializer.Serialize(updatedStyleData);
+        var content = new StringContent(postData, Encoding.UTF8, "application/json");
+        var response = await Http.PostAsync("my", content);
+
+        if (response.IsSuccessStatusCode)
+        {
+            // 处理成功响应
+            var responseData = await response.Content.ReadAsStringAsync();
+            Console.WriteLine("请求成功" + responseData);
+            // 这里可以处理responseData
+        }
+        else
+        {
+            // 处理失败响应
+            // 可以在这里处理错误情况
+        }
+    }
+
+
+    //创建裁床数据表格
+    IData[] data = new Data[] { };
+
+    List<int> ageColumns = new List<int>();
+
+    protected override void OnInitialized()
+    {
+        // 在组件初始化时初始化 AgeColumns
+        foreach (var dataItem in data)
+        {
+            dataItem.AgeColumns = new List<int>();
+        }
+    }
+
+    //添加行方法
+    void AddRow(string a, int b)
+    {
+        // 创建一个新的 IData 对象，可以自定义属性值
+        var newRow = new Data
+        {
+            Key = (data.Length + 1).ToString(), // 自定义 Key 值
+            Name = a, // 自定义 Name 值
+            Ad = 0, // 自定义 Address 值
+            col = b,
+            AgeColumns = new List<int>()
+        };
+
+        // 将新行添加到 data 数组
+        data = data.Append(newRow).ToArray();
+
+        // 为新行的 AgeColumns 属性添加 Age 列数据
+        listcoloid.Add(b);
+        newRow.AgeColumns = new List<int>();
+        foreach (var ageColumn in ageColumns)
+        {
+            newRow.AgeColumns.Add(0); // 添加新 Age 列，初始值为 0
+        }
+    }
+    //添加列方法
+    void AddAgeColumn(int sizeid, string Sizetname)
+    {
+        setid = sizeid;
+        listid.Add(sizeid);
+        ageColumns.Add(ageColumns.Count + 0);
+
+        // 更新数据源中的每个 IData 对象，以包含新的 Age 列
+        foreach (var dataItem in data)
+        {
+            dataItem.AgeColumns.Add(0); // 添加新 Age 列，初始值为 0
+        }
+    }
+    //定义页面数据类/接口
+    public interface IData
+    {
+        public string Key { get; set; }
+        public string Name { get; set; }
+        public int Ad { get; set; }
+        public int col { get; set; }
+        public List<int> AgeColumns { get; set; } // 用于保存 Age 列的值
+    }
+
+    public class Data : IData
+    {
+        [DisplayName("Key")]
+        public string Key { get; set; }
+
+        [DisplayName("Name")]
+        public string Name { get; set; }
+
+        [DisplayName("Address")]
+        public int Ad { get; set; }
+
+        [DisplayName("Tags")]
+        public int col { get; set; }
+
+        public List<int> AgeColumns { get; set; } // 不再需要在构造函数中初始化
+
+
+    }
+
+
+    //右键选择内容方法
+    private IData selectedRowData;
+    private void FillRight(IData rowData, int column)
+    {
+        // 获取要填充的值
+        var fillValue = rowData.AgeColumns[column];
+
+        // 使用相同的值填充右侧相邻单元格
+        for (int i = column + 1; i < rowData.AgeColumns.Count; i++)
+        {
+            rowData.AgeColumns[i] = fillValue;
+        }
+
+        // 在控制台中打印更新后的行数据
+        Console.WriteLine("更新后的行数据：");
+        Console.WriteLine(JsonSerializer.Serialize(rowData));
+    }
+
+    // 方法来获取表格中的所有数据
+    private void PrintTableData()
+    {
+        GenerateStyle();
+    }
+
+    //整理表格数据至Style
+    private async Task GenerateStyle()
+    {
+        List<Style> upstyleList = new List<Style>();
+        foreach (var coloid in listcoloid)
+        {
+            var aa = 0;
+            foreach (var sizeid in listid)
+            {
+                var relevantDataRows = data.Single(d => d.col == coloid);
+                int secondValue = relevantDataRows.AgeColumns.ElementAtOrDefault(aa);
+                int AdValue = relevantDataRows.Ad;
+                aa++;
+                Console.WriteLine("取出的数据：" + secondValue);
+                Style newStyle = new Style
+                {
+                    stylename = SelectedStyleName,
+                    stylecoloid = coloid,
+                    stylesizeid = sizeid,
+                    stylenum = secondValue * AdValue
+                };
+                upstyleList.Add(newStyle);
+            }
+            await SubmitData(upstyleList);
+        }
+    }
+    //提交数据
+    private async Task SubmitData(List<Style> styles)
+    {
+        // 发送 POST 请求到服务器，并将 updatedStyleData 列表作为请求体
+        var response = await Http.PostAsJsonAsync("Style", styles);
+
+        // 检查服务器响应的状态码
+        if (response.IsSuccessStatusCode)
+        {
+            // 处理成功响应
+
+            var responseData = await response.Content.ReadAsStringAsync();
+            // 这里可以处理responseData
+            await Success();
+        }
+        else
+        {
+            // 处理失败响应
+            // 可以在这里处理错误情况
+            await Error();
+        }
+
+
+
+
+    }
+    //全局提示 start
+    private async Task Success()
+    {
+        await _message.Success("扎号生成成功");
+    }
+
+    private async Task Error()
+    {
+        await _message.Error("扎号生成失败");
+
+    }
+
+    //end
+
+
+}

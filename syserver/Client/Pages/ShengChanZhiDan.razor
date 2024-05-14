@@ -1,0 +1,215 @@
+﻿@page "/shengchanzhidan"
+@inject NavigationManager NavigationManager
+@using System.ComponentModel.DataAnnotations;
+@using System.Text.Json;
+@using syserver.Shared.Model;
+@using syserver.Client;
+@using syserver.Client.Pages.SczdPages;
+@inject HttpClient Http
+
+<style>
+    .body {
+        width: 100%;
+    }
+
+    .parent {
+        overflow: auto; /* 清除浮动 */
+        margin-top: 1%;
+    }
+
+    .child {
+        float: left;
+        width: 25%; /*使每个子元素占据父元素的四分之一宽度 */
+        /*        margin-left: 1%;*/
+        text-align: center;
+    }
+
+    .child_2 {
+        float: left;
+        width: 50%;
+    }
+
+    .child_3 {
+        float: left;
+    }
+
+    .mgt {
+        margin-top: 2%;
+    }
+</style>
+
+
+<div class="body" style="height: 100%; ">
+    <div class="parent" style=" ">
+        <div class="child_2" style="width:60% ">
+            <div class="parent" style="width:100%; ">
+                <div class="child" style="width:40%">
+                    <div class="parent">
+                        <div class="child_2 mgt" style="width: 30%; height: 5%">
+                            <p>日期：</p>
+                        </div>
+                        <div class="child_2" style="width: 70%; height: 5%">
+                            <DatePicker TValue="DateTime?" />
+                        </div>
+                    </div>
+                </div>
+                <div class="child " style="width:24%">
+                    <div class="parent">
+                        <div class="child_2 mgt"style="width:40%">
+                            <p>款号:</p>
+                        </div>
+                        <div class="child_2"style="width:60%">
+                            <Select TItem="Style"
+                                    TItemValue="string"
+                                    DataSource="@styles"
+                                    @bind-Value="@selectvalue"
+                                    ValueName="@nameof(Style.stylename)"
+                                    LabelName="@nameof(Style.stylename)"
+                                    SortByLabel="@SortDirection.Ascending"
+                                    SortByGroup="@SortDirection.Ascending"
+                                    OnSelectedItemChanged="OnSelectedItemChangedHandler"
+                                    DefaultActiveFirstOption="false"
+                                    Style="width: 75px;">
+                            </Select>
+
+                        </div>
+                    </div>
+                </div>
+                <div class="child" style="width:18%">
+                    <div class="parent">
+                        <div class="child_2 mgt"style="width:40%">
+                            <p>床号:</p>
+                        </div>
+                        <div class="child_2" style="width:60%">
+                            <Input @bind-Value="@KuanhaoValue" />
+                        </div>
+                    </div>
+                </div>
+                <div class="child" style="width:18%">
+                    <div class="parent">
+                        <div class="child_2 mgt" style="width:40%">
+                            <p>数量:</p>
+                        </div>
+                        <div class="child_2" style="width:60%">
+                            <Input @bind-Value="@KuanhaoValue" />
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="parent">
+                <div class="child" style="width:100%">
+                    <div class="parent" style="width:100%">
+                        <div class="child_2" style="width: 10%;">
+                            <p>备注:</p>
+                        </div>
+                        <div class="child_2" style="width: 88%; margin-left: 2%;">
+                            <Input @bind-Value="@KuanhaoValue" style="width: 100%; " />
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+        <div class="child_2" style="width:40% ">
+            <div class="parent">
+                <div class="child">
+                    <Button Type="@ButtonType.Primary" size="Size.Small"style="width:90%">增加</Button>
+                </div>
+                <div class="child">
+                    <Button Type="@ButtonType.Primary" size="Size.Small"style="width: 90%">上一条</Button>
+                </div>
+                <div class="child">
+                    <Button Type="@ButtonType.Primary" size="Size.Small"style="width:90%">下一条</Button>
+                </div>
+                <div class="child">
+                    <Button Type="@ButtonType.Primary"size="Size.Small" style="width:90%">列表</Button>
+                </div>
+            </div>
+            <div class="parent mgt" style="margin-top: 6%;">
+                <div class="child">
+                    <Button Type="@ButtonType.Primary" size="Size.Small" style="width:90%">保存</Button>
+                </div>
+                <div class="child">
+                    <Button Type="@ButtonType.Primary" size="Size.Small"  style="width:90%">打印制单</Button>
+                </div>
+                <div class="child">
+                    <Button Type="@ButtonType.Primary" size="Size.Small"  style="width:90%">删除</Button>
+                </div>
+                <div class="child">
+                    <Button Type="@ButtonType.Primary" size="Size.Small"  style="width:90%">筛选款号</Button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div style="width:100%;height:100%">
+        <Card style="width:100%;height:200%;">
+            <CardTabs>
+                <Tabs DefaultActiveKey="1">
+                    <ChildContent>
+                        <TabPane Key="1">
+                            <TabTemplate >色码数量</TabTemplate>
+                            <ChildContent><syserver.Client.Pages.SczdPages.ColorCodeQuantity SelectedStyleName="@_selectedItem?.stylename"/></ChildContent>
+                        </TabPane>
+                        <TabPane Key="2">
+                            <TabTemplate>裁床填数</TabTemplate>
+                            <ChildContent><syserver.Client.Pages.SczdPages.CuttingBedNumber SelectedStyleName="@_selectedItem?.stylename" /></ChildContent>
+                        </TabPane>
+                        <TabPane Key="3">
+                            <TabTemplate>工艺单</TabTemplate>
+                            <ChildContent><syserver.Client.Pages.SczdPages.CraftsProcess /></ChildContent>
+                        </TabPane>
+                        <TabPane Key="4">
+                            <TabTemplate>工票打菲</TabTemplate>
+                            <ChildContent><syserver.Client.Pages.SczdPages.WorkInvoice /></ChildContent>
+                        </TabPane>
+                        <TabPane Key="5">
+                            <TabTemplate>工序完成明细</TabTemplate>
+                            <ChildContent><syserver.Client.Pages.SczdPages.TaskCompletionDetails /></ChildContent>
+                        </TabPane>
+                        <TabPane Key="6">
+                            <TabTemplate>完成情况</TabTemplate>
+                            <ChildContent><syserver.Client.Pages.SczdPages.Completion /></ChildContent>
+                        </TabPane>
+                    </ChildContent>
+                </Tabs>
+            </CardTabs>
+        </Card>
+    </div>
+
+</div>
+
+@code{
+    string KuanhaoValue { get; set; }
+
+    //导航栏
+    RenderFragment sub1Title =
+        @<Template>
+            <Icon Type="setting" Theme="outline"></Icon>
+            Navigation Three - Submenu
+        </Template>;
+//导航栏按钮链接
+private void NavigateToGuige()
+{
+NavigationManager.NavigateTo("/Guige"); // 这里的路径应与页面的路由路径匹配
+}
+
+//款号下拉列表
+List<Style> styles;
+private Style[]? style;
+string selectvalue;
+Style _selectedItem;
+
+protected override async Task OnInitializedAsync()
+{
+style = await Http.GetFromJsonAsync<Style[]>("Style");
+styles = style.ToList();
+}
+
+private void OnSelectedItemChangedHandler(Style value)
+{
+_selectedItem = value;
+Console.WriteLine($"selected: ${value?.stylename}");
+}
+}
+

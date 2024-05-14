@@ -1,0 +1,105 @@
+﻿@page "/login"
+@layout LoginLayout
+@inject IJSRuntime JSRuntime
+@inject NavigationManager navigationManager
+
+
+<div id="app">
+    <div id="body" style="height: 100%;">
+        <div id="main" class=" d-flex justify-content-center align-items-center  ">
+            <div class="row shadow   rounded-3 w-75 h-auto  align-middle position-absolute top-50 start-50 translate-middle  ">
+                <div class="col-4 w-50  custom-bg">
+                    <div class="row  ">
+         
+                    </div>
+                    <div class="p-3 text-white">
+                        <h3>Antd-Blazor后台管理</h3>
+                    </div>
+               
+                </div>
+                <div id="" class="offset-1 col-4 ">
+                    <div id="" class="">
+                        <h4 class="text-black p-3 mt-3 ml-1 float-start">登录</h4>
+                    </div>
+
+                    <form class="form-horizontal">
+                        <div class="form-group" Style="margin-top:5%">
+                            
+                            <div class="col-sm-10">
+                                <input type="email" class="form-control" id="inputEmail3" placeholder="请输入账号" @bind-value="@Email">
+                            </div>
+                        </div>
+
+                        <div class="form-group" Style="margin-top:5%">                            
+                            <div class="col-sm-10">
+                                <input type="password" class="form-control" id="inputPassword3" placeholder="请输入密码" @bind-value="@Password">
+                            </div>
+                        </div>
+
+                        <div class="form-group" Style="margin-top:5%">
+                            <div class="col-sm-offset-2 col-sm-10">
+                                <button type="button" class="btn btn-primary" @onclick="LoginMethod">登录</button>
+                            </div>
+                        </div>
+                    </form>
+
+                  
+    
+                    <div class="mt-5 ">
+                  
+                    </div>
+                </div>
+            </div>
+
+            <div class="fixed-bottom text-center">
+                ©Antd-Blazor后台管理 MIT Lisence
+            </div>
+        </div>
+    </div>
+    <div class="modal" id="sb">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-body">
+
+                    <img src="../img/svg/叉.png" height="200" width="250" class="offset-3">
+                    <p class="text-center">{{qk}}</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" data-bs-dismiss="modal" class="btn float-end">X 关闭</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="modal" id="cg">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-body">
+
+                    <img src="../img/svg/勾.png" height="300" width="450">
+                    <p class="text-center">登录成功!</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" data-bs-dismiss="modal" class="btn float-end" @click="dlcg">X 关闭</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+@code{
+    private string Email { get; set; }
+    private string Password { get; set; }
+    private async Task LoginMethod()
+    {
+        if (Email == "admin" && Password == "admin")
+        {
+            Console.WriteLine("登录成功");
+            LocalStorageHelper localStorageHelper = new LocalStorageHelper(JSRuntime);
+            await localStorageHelper.SetLocalStorage("email", Email);
+            navigationManager.NavigateTo("/", false);
+
+        }
+    }
+
+}

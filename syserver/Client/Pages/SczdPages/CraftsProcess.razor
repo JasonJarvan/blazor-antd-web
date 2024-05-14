@@ -1,0 +1,202 @@
+﻿@using System.ComponentModel
+@using AntDesign.TableModels
+<style>
+    body {
+        height: 500px;
+        width: 100%;
+    }
+
+    p {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
+    tr {
+        background-color: #1890ff;
+    }
+    th {
+        color: white;
+        text-align: center;
+    }
+    .toger {
+        display: inline-block;
+        /*        width: 20%;*/
+    }
+    .juzhong {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
+</style>
+<div class="bdoy">
+    <div>
+        <div class="toger">
+            <p>工艺单：</p>
+        </div>
+        <div class="toger " style="width: 10%; ">
+            @*<InputGroup Compact >
+            <SimpleSelect DefaultValue="@("Option1")"  >
+                <SelectOptions>
+                    <SimpleSelectOption Value="Option1" Label=" "></SimpleSelectOption>
+                    <SimpleSelectOption Value="Option1" Label="Option1"></SimpleSelectOption>
+                </SelectOptions>
+            </SimpleSelect>
+        </InputGroup>*@
+            <Select TItem="Person"
+                    TItemValue="string"
+                    DataSource="@_list"
+                    @bind-Value="@_selectedValue1"
+                    DefaultValue="@("No")"
+                    ValueName="@nameof(Person.Value)"
+                    LabelName="@nameof(Person.Name)"
+                    DisabledName="@nameof(Person.IsDisabled)"
+                    Style="width:120px"
+                    OnSelectedItemChanged="OnSelectedItemChangedHandler">
+            </Select>
+        </div>
+        <div class="toger">
+            <Button Type="@ButtonType.Primary">+</Button>
+        </div>
+        <div class="toger">
+            <p>1088默认工艺单</p>
+        </div>
+    </div>
+
+    <div>
+        <table class="table">
+            <thead>
+                <tr >
+                    <th>序号</th>
+                    <th>工序</th>
+                    <th>分组</th>
+                    <th>工价</th>
+                    <th>出工票</th>
+                    <th>统计工资</th>
+                    <th>允许跳工序</th>
+                    <th>工艺要求说明</th>
+                    <th>单件最快耗时</th>
+                    <th>单箱/扎数量</th>
+                </tr>
+            </thead>
+        </table>
+    </div>
+</div>
+
+@using System.Text.Json;
+@code {
+
+    WeatherForecast[] forecasts;
+
+    IEnumerable<WeatherForecast> selectedRows;
+    ITable table;
+
+    int _pageIndex = 1;
+    int _pageSize = 10;
+    int _total = 0;
+
+    protected override async Task OnInitializedAsync()
+    {
+        forecasts = await GetForecastAsync(1, 50);
+        _total = 50;
+    }
+
+    public class WeatherForecast
+    {
+        public int Id { get; set; }
+
+        [DisplayName("工序")]
+        public string col1 { get; set; }
+
+        [DisplayName("分组")]
+        public string col12 { get; set; }
+
+        [DisplayName("工价")]
+        public string col13 { get; set; }
+
+        [DisplayName("出工票")]
+        public string col14 { get; set; }
+
+        [DisplayName("统计工资")]
+        public string col15 { get; set; }
+
+        [DisplayName("允许跳工序")]
+        public string col16 { get; set; }
+
+        [DisplayName("工艺要求说明")]
+        public string col17 { get; set; }
+
+        [DisplayName("单件最快耗时")]
+        public string col18 { get; set; }
+
+        [DisplayName("单箱/扎数量")]
+        public string col19 { get; set; }
+
+
+    }
+
+
+    public async Task OnChange(QueryModel<WeatherForecast> queryModel)
+    {
+        Console.WriteLine(JsonSerializer.Serialize(queryModel));
+    }
+
+    public Task<WeatherForecast[]> GetForecastAsync(int pageIndex, int pageSize)
+    {
+        var rng = new Random();
+        return Task.FromResult(Enumerable.Range((pageIndex - 1) * pageSize + 1, pageSize).Select(index =>
+        {
+            var temperatureC = rng.Next(-20, 55);
+            return new WeatherForecast
+            {
+                Id = index,
+                //col1 = col1,
+                //TemperatureC = temperatureC,
+                //Summary = Summaries[rng.Next(Summaries.Length)],
+                //Hot = temperatureC > 30,
+            };
+        }).ToArray());
+    }
+
+    public void RemoveSelection(int id)
+    {
+        var selected = selectedRows.Where(x => x.Id != id);
+        selectedRows = selected;
+    }
+
+    private void Delete(int id)
+    {
+        forecasts = forecasts.Where(x => x.Id != id).ToArray();
+        _total = forecasts.Length;
+    }
+    //选择框
+    @code
+{
+    List<Person> _list;
+    List<string> _personNames;
+    string _selectedValue1;
+    class Person
+    {
+        public string Value { get; set; }
+        public string Name { get; set; }
+        public bool IsDisabled { get; set; }
+    }
+
+    protected override void OnInitialized()
+    {
+        _list = new List<Person>
+        {
+            new Person {Value = "jack", Name = "Jack"},
+            new Person {Value = "lucy", Name = "Lucy"},
+            new Person {Value = "No", Name = ""},
+            new Person {Value = "disabled", Name = "Disabled", IsDisabled = true},
+            new Person {Value = "yaoming", Name = "YaoMing"}
+        };
+        _personNames = new List<string> { "Jack", "Lucy", "YaoMing" };
+    }
+
+    private void OnSelectedItemChangedHandler(Person value)
+    {
+        Console.WriteLine($"selected: ${value?.Name}");
+    }
+}
+}

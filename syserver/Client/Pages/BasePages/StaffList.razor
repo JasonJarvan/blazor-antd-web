@@ -1,0 +1,214 @@
+﻿@page "/stafflist"
+@inject NavigationManager NavigationManager
+@using System.ComponentModel.DataAnnotations;
+@using System.Text.Json;
+@using syserver.Shared
+@inject HttpClient Http
+<style>
+    .button {
+        margin: 1%;
+    }
+</style>
+<Layout>
+    <div>
+        <div>
+            <div class="button">
+                <Space Direction="@DirectionVHType.Vertical">
+                    <SpaceItem>
+                        <Search Placeholder="输入查询名称" AllowClear EnterButton="@("查询")" Size="large" />
+                    </SpaceItem>
+                </Space>
+            </div>
+            <div>
+                <RadioGroup @bind-Value="selectionType">
+                    <Radio Value="@("checkbox")">查看所有员工</Radio>
+                    <Radio Value="@("radio")">查看在职员工</Radio>
+                </RadioGroup>
+            </div>
+            <div class="button">
+                <Button Type="primary" OnClick="@ShowModal">
+                    添加员工
+                </Button>
+                <Modal Title="@("Title")"
+                       Visible="@_visible"
+                       OnOk="@HandleOk"
+                       OnCancel="@HandleCancel"
+                       ConfirmLoading="@_confirmLoading">
+                    <Form @ref="form"
+                          Model="@model"
+                          OnFinish="OnFinish"
+                          OnFinishFailed="OnFinishFailed"
+                          LabelColSpan="5"
+                          WrapperColSpan="16">
+                        <FormItem Label="编号：">
+                            <Input @bind-Value="@context.Id" />
+                        </FormItem>
+                        <FormItem Label="名称：">
+                            <Input @bind-Value="@context.Name" />
+                        </FormItem>
+                        <FormItem Label="手机号：">
+                            <Input @bind-Value="@context.Tip" />
+                        </FormItem>
+                        <FormItem Label="密码：">
+                            <Input @bind-Value="@context.Tip" />
+                        </FormItem>
+                        <FormItem Label="月薪">
+                            <Input @bind-Value="@context.Tip" />
+                        </FormItem>
+                        <FormItem Label="部门">
+                            <Input @bind-Value="@context.Tip" />
+                        </FormItem>
+                        <FormItem Label="可做工种">
+                            <SimpleSelect DefaultValues=@(new[]{"lucy","jack"}) Mode="multiple" Style="width:200px;" OnSelectedItemsChanged="handleItemsChange">
+                                <SelectOptions>
+                                    <SimpleSelectOption Value="jack" Label="工种1"></SimpleSelectOption>
+                                    <SimpleSelectOption Value="lucy" Label="工种2"></SimpleSelectOption>
+                                    <SimpleSelectOption Value="disabled" Label="工种3" Disabled></SimpleSelectOption>
+                                    <SimpleSelectOption Value="Yiminghe" Label="工种4"></SimpleSelectOption>
+                                </SelectOptions>
+                            </SimpleSelect>
+                        </FormItem>
+                        <FormItem Label="入职日期">
+                            <DatePicker TValue="DateTime?" />
+                        </FormItem>
+                        <FormItem Label="押金">
+                            <Input @bind-Value="@context.Tip" />
+                        </FormItem>
+                        <FormItem Label="备注">
+                            <Input @bind-Value="@context.Tip" />
+                        </FormItem>
+
+                        <FormItem WrapperColOffset="8" WrapperColSpan="16">
+                            <Button Type="@ButtonType.Primary" HtmlType="submit">
+                                提交
+                            </Button>
+                            <Button OnClick="Reset">
+                                清空
+                            </Button>
+                        </FormItem>
+                    </Form>
+                </Modal>
+            </div>
+        </div>
+        <div>
+
+        </div>
+    </div>
+</Layout>
+@if (forecasts == null)
+{
+    <p><em>Loading...</em></p>
+}
+else
+{
+    <table class="table">
+        <thead>
+            <tr>
+                <th>编号</th>
+                <th>名称</th>
+                <th>电话</th>
+                <th>可做工种</th>
+                <th>班组</th>
+                <th>在场押金</th>
+                <th>月薪</th>
+                <th>入职日期</th>
+                <th>离职日期</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var forecast in forecasts)
+            {
+                <tr>
+                    <td>@forecast.Date.ToShortDateString()</td>
+                    <td>@forecast.TemperatureC</td>
+                    <td>@forecast.Summary</td>
+                    <td>@forecast.Date.ToShortDateString()</td>
+                    <td>@forecast.Date.ToShortDateString()</td>
+                    <td>@forecast.Date.ToShortDateString()</td>
+                    <td>@forecast.Date.ToShortDateString()</td>
+                    <td>@forecast.Date.ToShortDateString()</td>
+                    <td>@forecast.Date.ToShortDateString()</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+@code {
+
+    RenderFragment _audioIcon =@<Icon Type="audio" Theme="outline" Style="color: #1890ff" />;
+
+    //添加规格对话框设置
+    bool _visible = false;
+    bool _confirmLoading = false;
+    string _modalText = "Content of the modal";
+
+    private void ShowModal()
+    {
+        _visible = true;
+    }
+
+
+    private async Task HandleOk(MouseEventArgs e)
+    {
+        _modalText = "The modal will be closed after two seconds";
+        _confirmLoading = true;
+        StateHasChanged();
+        await Task.Delay(2000);
+        _visible = false;
+        _confirmLoading = false;
+    }
+
+    private void HandleCancel(MouseEventArgs e)
+    {
+        Console.WriteLine("Clicked cancel button");
+        _visible = false;
+    }
+
+    public class Model
+    {
+        [Required]
+        public string Id { get; set; }
+        [Required]
+        public string Name { get; set; }
+        [Required]
+        public string Tip { get; set; }
+    }
+
+    private Model model = new Model();
+    private Form<Model> form;
+
+    private void Reset(MouseEventArgs args)
+    {
+        form.Reset();
+    }
+
+    private void OnFinish(EditContext editContext)
+    {
+        Console.WriteLine($"Success:{JsonSerializer.Serialize(model)}");
+    }
+
+    private void OnFinishFailed(EditContext editContext)
+    {
+        Console.WriteLine($"Failed:{JsonSerializer.Serialize(model)}");
+    }
+
+
+
+    //表单数据信息显示
+
+    private WeatherForecast[]? forecasts;
+
+    protected override async Task OnInitializedAsync()
+    {
+        forecasts = await Http.GetFromJsonAsync<WeatherForecast[]>
+        ("WeatherForecast");
+    }
+
+    //选择工种
+    void handleItemsChange(IEnumerable<string> value)
+    {
+        Console.WriteLine(value);
+    }
+    string selectionType = "checkbox";
+}

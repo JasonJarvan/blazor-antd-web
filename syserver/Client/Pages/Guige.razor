@@ -1,0 +1,246 @@
+﻿@page "/guige"
+@inject NavigationManager NavigationManager
+@using System.ComponentModel.DataAnnotations;
+@using System.Text.Json;
+@using syserver.Shared;
+@using syserver.Shared.Model;
+@using System.Text;
+@inject HttpClient Http;
+
+
+<style>
+    .button {
+        margin: 1%;
+    }
+</style>
+<Layout>
+    <div>
+        <div>
+            <div class="button">
+                <Space Direction="@DirectionVHType.Vertical">
+                    <SpaceItem>
+                        <Search Placeholder="输入查询名称" AllowClear EnterButton="@("查询")" Size="large" />
+                    </SpaceItem>
+                </Space>
+            </div>
+            <div class="button">
+                <Button Type="primary" OnClick="@ShowModal">
+                    添加规格数据
+                </Button>
+                <Modal Title="@("Title")"
+                       Visible="@_visible"
+                       OnOk="@HandleOk"
+                       OnCancel="@HandleCancel"
+                       ConfirmLoading="@_confirmLoading">
+                    <Form @ref="form"
+                          Model="@model"
+                          OnFinish="OnFinish"
+                          OnFinishFailed="OnFinishFailed"
+                          LabelColSpan="5"
+                          WrapperColSpan="16">
+                        <FormItem Label="编号">
+                            <Input @bind-Value="@context.Id" />
+                        </FormItem>
+                        <FormItem Label="名称">
+                            <Input @bind-Value="@context.Name" />
+                        </FormItem>
+                        <FormItem Label="备注">
+                            <Input @bind-Value="@context.Tip" />
+                        </FormItem>
+
+                        <FormItem WrapperColOffset="8" WrapperColSpan="16">
+                            <Button Type="@ButtonType.Primary" HtmlType="submit">
+                                提交
+                            </Button>
+                            <Button OnClick="Reset">
+                                清空
+                            </Button>
+                        </FormItem>
+                    </Form>
+                </Modal>
+            </div>
+        </div>
+        <div>
+
+        </div>
+    </div>
+</Layout>
+@if (style == null)
+{
+    <p><em>Loading...</em></p>
+}
+else
+{
+    <table class="table">
+        <thead>
+            <tr>
+                <th>颜色/尺码</th> <!-- 空列用于行标题 -->
+                @foreach (var row in style.Select(s => s.stylesizeid).Distinct())
+                {
+                    <th>@row</th>
+                }
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var col in style.Select(s => s.stylecoloid).Distinct())
+            {
+                <tr>
+                    <td>@col</td>
+                    @foreach (var row in style.Select(s => s.stylesizeid).Distinct())
+                    {
+                        var cellData = style.FirstOrDefault(s => s.stylecoloid == col && s.stylesizeid == row);
+
+                        @*<td>@cellData?.stylenum</td>*@
+                        <td>
+                            <input type="text" value="@cellData?.stylenum" @oninput="e => UpdateStyleNum(col, row, e)" />
+                        </td>
+
+                    }
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+<div>
+    <Button Type="primary" OnClick="@SubmitData">
+        提交
+    </Button>
+</div>
+
+
+
+@code {
+
+    RenderFragment _audioIcon =@<Icon Type="audio" Theme="outline" Style="color: #1890ff" />;
+
+    //添加规格对话框设置
+    bool _visible = false;
+    bool _confirmLoading = false;
+    string _modalText = "Content of the modal";
+
+    private void ShowModal()
+    {
+        _visible = true;
+    }
+    public void TiJiao()
+    {
+
+    }
+
+
+    private async Task HandleOk(MouseEventArgs e)
+    {
+        _modalText = "The modal will be closed after two seconds";
+        _confirmLoading = true;
+        StateHasChanged();
+        await Task.Delay(2000);
+        _visible = false;
+        _confirmLoading = false;
+    }
+
+    private void HandleCancel(MouseEventArgs e)
+    {
+        Console.WriteLine("Clicked cancel button");
+        _visible = false;
+    }
+
+    public class Model
+    {
+        [Required]
+        public string Id { get; set; }
+        [Required]
+        public string Name { get; set; }
+        [Required]
+        public string Tip { get; set; }
+    }
+
+    private Model model = new Model();
+    private Form<Model> form;
+
+    private void Reset(MouseEventArgs args)
+    {
+        form.Reset();
+    }
+
+    private void OnFinish(EditContext editContext)
+    {
+        Console.WriteLine($"Success:{JsonSerializer.Serialize(model)}");
+    }
+
+    private void OnFinishFailed(EditContext editContext)
+    {
+        Console.WriteLine($"Failed:{JsonSerializer.Serialize(model)}");
+    }
+
+
+    // 更新 stylenum 数据
+    private void UpdateStyleNum(int col, int row, ChangeEventArgs e)
+    {
+        var cellData = style.FirstOrDefault(s => s.stylecoloid == col && s.stylesizeid == row);
+
+        if (cellData != null)
+        {
+            // 将输入的文本转换为整数，或者根据需要进行其他验证
+            if (int.TryParse(e.Value.ToString(), out int newValue))
+            {
+                cellData.stylenum = newValue;
+            }
+        }
+    }
+    //表单数据信息显示
+    private Style[]? style;
+    private WeatherForecast[]? forecasts;
+
+    protected override async Task OnInitializedAsync()
+    {
+        style = await Http.GetFromJsonAsync<Style[]>("WeatherForecast");
+        //forecasts = await Http.GetFromJsonAsync<WeatherForecast[]>("WeatherForecast");
+    }
+    //提交数据
+    private async Task SubmitData()
+    {
+        //// 构建一个对象，包含需要提交的数据
+        var updatedStyleData = new List<Style>();
+
+        foreach (var col in style.Select(s => s.stylecoloid).Distinct())
+        {
+            foreach (var row in style.Select(s => s.stylesizeid).Distinct())
+            {
+                var cellData = style.FirstOrDefault(s => s.stylecoloid == col && s.stylesizeid == row);
+                updatedStyleData.Add(new Style
+                {
+                    stylename = "test",
+                    stylecoloid = col,
+                    stylesizeid = row,
+                    stylenum = cellData.stylenum
+                });
+            }
+        }
+        string postData = JsonSerializer.Serialize(updatedStyleData);
+        Console.WriteLine("postData数据："+postData);
+        var content = new StringContent(postData, Encoding.UTF8, "application/json");
+        // 发送 POST 请求到服务器，并将 updatedStyleData 列表作为请求体
+        var response = await Http.PostAsJsonAsync("my", updatedStyleData);
+
+        // 检查服务器响应的状态码
+        if (response.IsSuccessStatusCode)
+        {
+            // 处理成功响应
+
+            var responseData = await response.Content.ReadAsStringAsync();
+            Console.WriteLine("请求成功"+responseData);
+            // 这里可以处理responseData
+        }
+        else
+        {
+            // 处理失败响应
+            // 可以在这里处理错误情况
+        }
+
+        //style = await Http.PostAsJsonAsync<Style[]>("my" );
+
+
+    }
+
+
+}

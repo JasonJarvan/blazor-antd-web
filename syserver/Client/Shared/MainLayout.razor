@@ -1,0 +1,86 @@
+﻿@inherits LayoutComponentBase
+    <Layout>
+
+
+        <div id="app">
+            <div id="body" style="height: 100%;">
+                <div id="main" class=" d-flex justify-content-center align-items-center  ">
+                    <div class="row shadow   rounded-3 w-75 h-auto  align-middle position-absolute top-50 start-50 translate-middle  ">
+                        <div class="col-4 w-50  custom-bg">
+                            <div class="row  ">
+                                <img src="../img/OR@Z%7BWA6_)C4FD%5B@0QWH2(T_tmb.jpg" width="20px" height="60 " class="col-3 ">
+                                
+                            </div>
+                            
+                        </div>
+                        <div id="" class="offset-1 col-4 ">
+                            <div id="" class="">
+                                <h4 class="text-black p-3 mt-3 ml-1 float-start">登录</h4>
+                            </div>
+
+                            <div class="input-group mt-3 ">
+                                <label for="" class="input-group-text"><img src="../img/svg/人像.svg" width="20" height="20"></label>
+                                <input type="text" name="" id="" value="" class="form-control col" v-model="user.name" placeholder="登录账户" />
+                            </div>
+
+                            <div class="input-group mt-3">
+                                <label class="input-group-text"><img src="../img/svg/锁.svg" width="20" height="20"></label>
+                                <input type="password" name="" id="" value="" class="form-control col" v-model="user.pwd" placeholder="登录密码" />
+                            </div>
+
+                            <div class=" mt-3">
+                                <input type="checkbox" name="rememberPassword" id="rememberPassword" v-model="user.ji" class="form-check d-inline-block" />
+                                <span>记住密码下次自动登录</span>
+                            </div>
+                            <div class="mt-5 ">
+                                <button class="btn btn-primary w-100" type="button" @onclick="NavigateToShengChanZHiDan" :disabled="obj1.jz==true">登录</button>
+                            </div>
+                            <div class="mt-5 ">
+                                <a href="zc.html" class="link-primary link-offset-2 link-underline-opacity-25 link-underline-opacity-100-hover">注册界面</a>                                
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal" id="sb">
+                <div class="modal-dialog modal-dialog-centered">
+                    <div class="modal-content">
+                        <div class="modal-body">
+
+                            <img src="../img/svg/叉.png" height="200" width="250" class="offset-3">
+                            <p class="text-center">{{qk}}</p>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" data-bs-dismiss="modal" class="btn float-end">X 关闭</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal" id="cg">
+                <div class="modal-dialog modal-dialog-centered">
+                    <div class="modal-content">
+                        <div class="modal-body">
+
+                            <img src="../img/svg/勾.png" height="300" width="450">
+                            <p class="text-center">登录成功!</p>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" data-bs-dismiss="modal" class="btn float-end" @click="dlcg">X 关闭</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </Layout>
+
+
+
+    @code{
+
+        private void NavigateToShengChanZHiDan()
+        {
+
+            NavigationManager.NavigateTo("Guige");
+        }
+    }
+

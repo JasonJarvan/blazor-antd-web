@@ -1,0 +1,225 @@
+﻿@inherits LayoutComponentBase
+@inject NavigationManager navigationManager
+@inject IJSRuntime JSRuntime
+
+@*<div class="page">
+        <div class="sidebar">
+            <NavMenu />
+        </div>
+
+        <main>
+            <div class="top-row px-4">
+                <a href="https://docs.microsoft.com/aspnet/" target="_blank">About</a>
+            </div>
+
+            <article class="content px-4">
+                @Body
+            </article>
+        </main>
+    </div>*@
+
+<Layout Style="height:800px">
+    <Sider Theme=siderTheme @bind-Collapsed=@collapsed NoTrigger OnCollapse="OnCollapse">
+        @*<div class="logo" style="height:6%" />*@
+        <div style="font-size:15px;color:blueviolet; margin:10%">Antd-Blazor后台管理</div>
+
+        <Menu Theme=theme Mode="MenuMode.Inline" DefaultSelectedKeys=@(new[]{"1"})>
+            <SubMenu Key="sub1" TitleTemplate=@sub1Title>
+                <MenuItem Key="1" @onclick="NavigateToGuige">规格</MenuItem>
+                <MenuItem Key="2" @onclick="NavigateToTest">颜色</MenuItem>
+                <MenuItem Key="3">尺码</MenuItem>
+                <MenuItem Key="4">物料</MenuItem>
+                <MenuItem Key="5">单位</MenuItem>
+                <MenuItem Key="6">部门</MenuItem>
+                <MenuItem Key="7">员工</MenuItem>
+                <MenuItem Key="8" @onclick="NavigateToStaffList">工种列表</MenuItem>
+                <MenuItem Key="9">工序</MenuItem>
+            </SubMenu>
+            <SubMenu Key="sub2" TitleTemplate=@sub2Title>
+                <MenuItem Key="10">制单列表</MenuItem>
+                <MenuItem Key="11">工艺要求</MenuItem>
+                <MenuItem Key="12" @onclick="NavigateToShengChanZHiDan">生产制单</MenuItem>
+            </SubMenu>
+            <SubMenu Key="sub5" TitleTemplate=@sub5Title>
+                <MenuItem Key="25">空</MenuItem>
+                @*<MenuItem Key="26">Option 10</MenuItem>
+                    <MenuItem Key="27">Option 11</MenuItem>
+                    <MenuItem Key="28">Option 12</MenuItem>*@
+            </SubMenu>
+            <SubMenu Key="sub6" TitleTemplate=@sub6Title>
+                <MenuItem Key="29">客户还款</MenuItem>
+                <MenuItem Key="30">收供应商货款</MenuItem>
+                <MenuItem Key="31">对账单</MenuItem>
+                <MenuItem Key="32">Option 12</MenuItem>
+            </SubMenu>
+            <SubMenu Key="sub7" TitleTemplate=@sub7Title>
+                <MenuItem Key="33">权限设置</MenuItem>
+                <MenuItem Key="34">用户列表</MenuItem>
+                <MenuItem Key="35">扫菲设置</MenuItem>
+                <MenuItem Key="36">系统设置</MenuItem>
+            </SubMenu>
+        </Menu>
+    </Sider>
+    <Layout Class="site-layout">
+        <Header Class="site-layout-background" Style="padding: 0;">
+            <div>
+
+                @if (collapsed)
+                {
+                    <Icon Type="menu-unfold" Theme="outline" Class="trigger" OnClick="toggle" />
+                }
+                else
+                {
+                    <Icon Type="menu-fold" Theme="outline" Class="trigger" OnClick="toggle" />
+                }
+
+                <Switch Checked="theme == MenuTheme.Dark" OnChange=changeTheme CheckedChildren=@("Dark") UnCheckedChildren=@("Light") Style="margin-left:85%" />
+                @*<a href="/" target="_blank" Style="margin-left:3%">退出</a>*@
+                <Button type="link"  @onclick="LoginMethod">退出</Button>
+            </div>
+            <div>
+
+            </div>
+
+            @*<div class="top-row px-4">
+                    <a href="https://docs.microsoft.com/aspnet/" target="_blank">About</a>
+                </div>*@
+        </Header>
+        <Content Class="site-layout-background" Style="width:100%;height:800px; margin: 0px 0px;padding: 14px;">
+            <main>
+                <article class="content px-4" style="margin:0;">
+                    @Body
+                </article>
+            </main>
+        </Content>
+    </Layout>
+</Layout>
+
+<style>
+    #components-layout-demo-custom-trigger .trigger {
+        font-size: 66px;
+        line-height: 64px;
+        padding: 0 24px;
+        cursor: pointer;
+        transition: color 0.3s;
+    }
+
+        #components-layout-demo-custom-trigger .trigger:hover {
+            color: #1890ff;
+        }
+
+    #components-layout-demo-custom-trigger .logo {
+        height: 64px;
+        background: rgba(255, 255, 255, 0.2);
+        margin: 16px;
+    }
+
+    .site-layout .site-layout-background {
+        background: #fff;
+    }
+</style>
+
+
+@code{
+    //重定向
+    protected override async Task OnInitializedAsync()
+    {
+        LocalStorageHelper localStorageHelper = new LocalStorageHelper(JSRuntime);
+        if (string.IsNullOrEmpty(await localStorageHelper.GetLocalStorage("email")))
+        {
+            navigationManager.NavigateTo("Login");
+        }
+    }
+    bool collapsed;
+
+    void toggle()
+    {
+        collapsed = !collapsed;
+    }
+
+    void OnCollapse(bool isCollapsed)
+    {
+        Console.WriteLine($"Collapsed: {isCollapsed}");
+    }
+
+    //主题
+    SiderTheme siderTheme = SiderTheme.Light;
+    MenuTheme theme = MenuTheme.Light;
+
+
+    string current = "1";
+
+    void changeTheme(bool value)
+    {
+        this.theme = value ? MenuTheme.Dark : MenuTheme.Light;
+        this.siderTheme = value ? SiderTheme.Dark : SiderTheme.Light;
+    }
+    RenderFragment sub1Title =
+        @<span>
+            <Icon Type="mail" Theme="outline"></Icon>
+            <span>Test</span>
+        </span>;
+     RenderFragment sub2Title =
+        @<span>
+            <Icon Type="appstore" Theme="outline"></Icon>
+            <span>Test</span>
+        </span>;
+  RenderFragment sub3Title =
+@<span>
+    <Icon Type="setting" Theme="outline"></Icon>
+    <span>Test</span>
+</span>;
+
+RenderFragment sub4Title =
+@<span>
+    <Icon Type="setting" Theme="outline"></Icon>
+    <span>Test</span>
+</span>;
+
+RenderFragment sub5Title =
+@<span>
+    <Icon Type="setting" Theme="outline"></Icon>
+    <span>Test</span>
+</span>;
+
+RenderFragment sub6Title =
+@<span>
+    <Icon Type="setting" Theme="outline"></Icon>
+    <span>Test</span>
+</span>;
+
+RenderFragment sub7Title =
+@<span>
+    <Icon Type="setting" Theme="outline"></Icon>
+    <span>Test</span>
+</span>;
+    private void NavigateToGuige()
+    {
+        NavigationManager.NavigateTo("guige"); // 在这里指定你想要导航到的页面路径
+    }
+    private void NavigateToTest()
+    {
+        NavigationManager.NavigateTo("test"); // 在这里指定你想要导航到的页面路径
+    }
+    private void NavigateToStaffList()
+    {
+        NavigationManager.NavigateTo("stafflist"); // 在这里指定你想要导航到的页面路径
+    }
+    private void NavigateToShengChanZHiDan()
+    {
+        NavigationManager.NavigateTo("shengchanzhidan"); // 在这里指定你想要导航到的页面路径
+    }
+
+
+
+    private async Task LoginMethod()
+    {
+
+        navigationManager.NavigateTo("/Login", false);
+
+
+    }
+
+
+}
+

@@ -1,0 +1,125 @@
+﻿@using System.ComponentModel
+@using AntDesign.TableModels
+<style>
+    body {
+        height: 500px;
+        width: 100%;
+    }
+
+    p {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
+    tr {
+        background-color: #1890ff;
+    }
+    th {
+        color: white;
+        text-align: center;
+    }
+    .toger {
+        display: inline-block;
+        width: 48%;
+    }
+
+    .juzhong {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
+</style>
+<div class="bdoy">
+    <div>
+        <div class="toger">
+            <Button Type="@ButtonType.Primary">重新出公票</Button>
+        </div>
+        <div class="toger">
+            <Select TItem="Person"
+                    TItemValue="string"
+                    DataSource="@_list"
+                    @bind-Value="@_selectedValue1"
+                    DefaultValue="@("No")"
+                    ValueName="@nameof(Person.Value)"
+                    LabelName="@nameof(Person.Name)"
+                    DisabledName="@nameof(Person.IsDisabled)"
+                    Style="width:170px"
+                    OnSelectedItemChanged="OnSelectedItemChangedHandler">
+            </Select>
+            <Button Type="@ButtonType.Primary">打印公票</Button>
+        </div>
+    </div>
+    <br />
+    <div style="width:100%;">
+        <div class="toger">
+            <table class="table">
+                <thead>
+                    <tr >
+                        <th>尺码</th>
+                        <th>颜色</th>
+                        <th>箱/扎号</th>
+                        <th>数量</th>
+                    </tr>
+                </thead>
+            </table>
+        </div>
+        <div class="toger">
+            <table class="table">
+                <thead>
+                    <tr >
+                        <th>序号</th>
+                        <th>工序</th>
+                        <th>数量</th>
+                        <th>员工</th>
+                        <th>日期</th>
+                    </tr>
+                </thead>
+            </table>
+        </div>
+    </div>
+</div>
+
+@using System.Text.Json;
+@code {
+
+    ITable table;
+
+    int _pageIndex = 1;
+    int _pageSize = 10;
+    int _total = 0;
+
+
+
+   
+    //选择框
+    @code
+{
+        List<Person> _list;
+        List<string> _personNames;
+        string _selectedValue1;
+        class Person
+        {
+            public string Value { get; set; }
+            public string Name { get; set; }
+            public bool IsDisabled { get; set; }
+        }
+
+        protected override void OnInitialized()
+        {
+            _list = new List<Person>
+        {
+            new Person {Value = "jack", Name = "Jack"},
+            new Person {Value = "lucy", Name = "Lucy"},
+            new Person {Value = "No", Name = "3^8单列.frx"},
+            new Person {Value = "disabled", Name = "Disabled", IsDisabled = true},
+            new Person {Value = "yaoming", Name = "YaoMing"}
+        };
+            _personNames = new List<string> { "Jack", "Lucy", "YaoMing" };
+        }
+
+        private void OnSelectedItemChangedHandler(Person value)
+        {
+            Console.WriteLine($"selected: ${value?.Name}");
+        }
+    }
+}

@@ -1,0 +1,112 @@
+﻿@using System.ComponentModel
+@using AntDesign.TableModels
+<style>
+    body {
+        height: 500px;
+        width: 100%;
+    }
+
+    p {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
+    tr {
+        background-color: #1890ff;
+    }
+    th {
+        width:20px;
+        color: white;
+        text-align: center;
+        overflow-x: scroll;
+    }
+
+    .toger {
+        display: inline-block;
+        width: 50%;
+    }
+
+    .juzhong {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
+</style>
+<div class="bdoy">
+    <div>
+        <div >
+            <Button Type="@ButtonType.Primary">刷新</Button>
+        </div>
+    </div>
+    <br />
+    <div style="width:100%">
+    
+            <table class="table" style="width: 100%; ">
+                <thead>
+                    <tr >
+                        <th>箱号</th>
+                        <th>颜色</th>
+                        <th>尺码</th>
+                        <th>数量</th>
+                        <th>打标</th>
+                        <th>定型150s</th>
+                        <th>接边布</th>
+                        <th>订加里布碗</th>
+                        <th>接边布4</th>
+                        <th>剪线头</th>
+                        <th>剪边布</th>
+                        <th>拉下牙</th>
+                        <th>剪下牙</th>
+                        <th>剪扣线</th>
+                        <th>拉上牙</th>
+                        <th>下牙交叉</th>
+                        <th>定2次</th>
+                        <th>双针碗</th>
+                        <th>剪缝线</th>
+                        <th>接花面</th>
+                        <th>成品入库</th>
+                        <th>包边</th>                        
+                    </tr>
+                </thead>
+            </table>      
+    </div>
+</div>
+
+@using System.Text.Json;
+@code {
+
+    ITable table;
+
+    int _pageIndex = 1;
+    int _pageSize = 10;
+    int _total = 0;
+
+    List<Person> _list;
+    List<string> _personNames;
+    string _selectedValue1;
+    class Person
+    {
+        public string Value { get; set; }
+        public string Name { get; set; }
+        public bool IsDisabled { get; set; }
+    }
+
+    protected override void OnInitialized()
+    {
+        _list = new List<Person>
+    {
+        new Person {Value = "jack", Name = "Jack"},
+        new Person {Value = "lucy", Name = "Lucy"},
+        new Person {Value = "No", Name = "3^8单列.frx"},
+        new Person {Value = "disabled", Name = "Disabled", IsDisabled = true},
+        new Person {Value = "yaoming", Name = "YaoMing"}
+    };
+        _personNames = new List<string> { "Jack", "Lucy", "YaoMing" };
+    }
+
+    private void OnSelectedItemChangedHandler(Person value)
+    {
+        Console.WriteLine($"selected: ${value?.Name}");
+    }
+    
+}
