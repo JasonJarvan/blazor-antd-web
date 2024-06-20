@@ -15,9 +15,7 @@
 
 ### 项目效果
 
-![img.png](pictures/img_11.png)
-
-![img.png](pictures/img_12.png)
+![v1_1.png](pictures%2Fv1_1.png)
 
 ## 源码介绍
 介绍：文件内包含数据库sql(源码采用Mysql数据库) 和blazor web的工程文件。
@@ -36,8 +34,6 @@ Blazor可以是Blazor WebAssembly（前端代码运行在浏览器中）或Blazo
 前端页面在客户端Page的位置下存放  
 
 ### 源码
-
-![img_1.png](pictures/img_1.png)
 
 Page 页面内编写页面样式（html + style）及逻辑代码（类似于js）,以Guige页面为例
 
